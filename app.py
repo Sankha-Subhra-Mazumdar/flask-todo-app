@@ -18,19 +18,50 @@ class ToDo(db.Model):
     def __repr__(self) -> str:
         return f"{self.sno} - {self.title}"
 
-@app.route("/", methods = ['GET','POST'])
-def add():
+# @app.route("/", methods = ['GET','POST'])
+# def add():
     
+#     if request.method == "POST":
+#         title = request.form['title']
+#         desc = request.form['desc']
+#         if title and desc:
+#             todo = ToDo(title = title, desc = desc)
+#             db.session.add(todo)
+#             db.session.commit()
+#         return redirect('/')
+#     AllToDo = ToDo.query.all()
+#     return render_template('index.html', AllToDo = AllToDo)
+from sqlalchemy import or_
+
+@app.route("/", methods=['GET', 'POST'])
+def add():
+
+    # 🔴 Handle form submission (POST)
     if request.method == "POST":
         title = request.form['title']
         desc = request.form['desc']
+
         if title and desc:
-            todo = ToDo(title = title, desc = desc)
+            todo = ToDo(title=title, desc=desc)
             db.session.add(todo)
             db.session.commit()
+
         return redirect('/')
-    AllToDo = ToDo.query.all()
-    return render_template('index.html', AllToDo = AllToDo)
+
+    # 🟢 Handle search (GET)
+    query = request.args.get('query')
+
+    if query:
+        AllToDo = ToDo.query.filter(
+            or_(
+                ToDo.title.ilike(f"%{query}%"),
+                ToDo.desc.ilike(f"%{query}%")
+            )
+        ).all()
+    else:
+        AllToDo = ToDo.query.all()
+
+    return render_template('index.html', AllToDo=AllToDo)
 
 
 @app.route("/show")
